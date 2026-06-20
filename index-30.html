@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>El Cronista Inmortal</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a84c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cronista">
+<!-- PWA: apple-touch-icon es obligatorio para que iOS ofrezca "Agregar a pantalla de inicio" -->
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,400&family=Inter:wght@300;400;500&display=swap');
+:root{
+  --bg:#080a0f;--surface:#0d1018;--surface2:#111520;
+  --border:#1a2035;--gold:#c9a84c;--gold2:#8b6914;
+  --jade:#2d6e4e;--text:#e8e0d0;--muted:#5a6070;--faint:#141820;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:9px 13px;display:flex;align-items:center;gap:9px;flex-shrink:0;box-shadow:0 1px 0 var(--gold2)}
+.logo{width:36px;height:36px;border-radius:50%;border:1px solid var(--gold2);background:radial-gradient(circle at 40% 35%,#1a2a1a,#080a0f);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:16px;color:var(--gold);flex-shrink:0}
+.hdr-info{flex:1;min-width:0}
+.hdr-info h1{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-info p{font-size:9px;color:var(--muted);font-style:italic}
+.hdr-btns{display:flex;gap:5px;flex-shrink:0}
+.hdr-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:6px;font-size:10px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+.hdr-btn:active{border-color:var(--gold2);color:var(--gold)}
+.mute-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 8px;border-radius:6px;font-size:13px;cursor:pointer}
+.mute-btn.muted{opacity:.4}
+
+.cfg-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:5px 13px;display:flex;align-items:center;gap:7px;flex-shrink:0}
+.cfg-bar label{font-size:10px;color:var(--muted);white-space:nowrap}
+.cfg-bar input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:11px;font-family:'Inter',sans-serif;outline:none;min-width:0}
+.cfg-bar input:focus{border-color:var(--gold2)}
+.btn-ok{background:var(--gold2);color:var(--text);border:none;padding:4px 10px;border-radius:6px;font-size:10px;cursor:pointer;white-space:nowrap}
+
+.workspace{flex:1;display:flex;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:145px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-tab{flex:1;padding:7px 2px;font-size:9px;letter-spacing:.8px;text-transform:uppercase;font-family:'Cinzel',serif;color:var(--muted);cursor:pointer;text-align:center;border-bottom:2px solid transparent;transition:all .2s}
+.sb-tab.active{color:var(--gold);border-bottom-color:var(--gold2)}
+.sb-panel{flex:1;overflow-y:auto;display:none}
+.sb-panel.active{display:block}
+.sb-panel::-webkit-scrollbar{width:2px}
+.sb-panel::-webkit-scrollbar-thumb{background:var(--faint)}
+.sb-sec{padding:8px 10px;border-bottom:1px solid var(--border);font-size:10px}
+.sb-sec h3{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1.5px;color:var(--gold2);text-transform:uppercase;margin-bottom:6px}
+.sb-row{display:flex;justify-content:space-between;margin-bottom:3px}
+.sb-lbl{color:var(--muted)}
+.sb-val{color:var(--gold);font-family:'Crimson Pro',serif;font-style:italic;text-align:right;max-width:78px}
+.char-item{background:var(--faint);border:1px solid var(--border);border-radius:5px;padding:4px 7px;margin-bottom:4px}
+.char-name{font-family:'Cinzel',serif;font-size:9px;color:var(--text)}
+.char-role{font-size:8px;color:var(--muted);margin-top:1px}
+.skill-item{color:var(--gold);margin-bottom:3px;font-size:9px}
+
+/* CHAPTER LIST IN SIDEBAR */
+.ch-list-item{padding:9px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.ch-list-item:active{background:var(--faint)}
+.ch-list-num{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;color:var(--gold2);text-transform:uppercase}
+.ch-list-title{font-family:'Crimson Pro',serif;font-size:12px;color:var(--text);margin-top:2px;line-height:1.3}
+.ch-list-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:4px;margin-top:5px;border:1px solid var(--border)}
+
+/* CHAT */
+.chat-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#chat{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:14px}
+#chat::-webkit-scrollbar{width:3px}
+#chat::-webkit-scrollbar-thumb{background:var(--faint)}
+
+/* CHAPTER CARD */
+.chapter-card{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--gold2);border-radius:12px;overflow:hidden}
+.ch-header{padding:7px 13px;background:rgba(201,168,76,.05);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.ch-num{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--gold2);text-transform:uppercase}
+.ch-title{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);padding:11px 13px 5px;letter-spacing:.5px}
+
+/* ── IMAGEN PORTADA: ocupa todo el ancho, antes del texto ── */
+.img-portada{width:100%;border-bottom:1px solid var(--border);position:relative;aspect-ratio:3/2;background:var(--faint);overflow:hidden}
+.img-portada img{width:100%;height:100%;object-fit:cover;display:block}
+.img-portada .img-slot-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(8,10,15,.9));color:var(--gold);font-size:9px;padding:18px 10px 7px;letter-spacing:.6px;font-family:'Crimson Pro',serif;font-style:italic;text-align:center}
+
+.img-loading{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--muted);font-size:9px;min-height:120px}
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.new-skill{padding:3px 13px 5px;font-size:11px;color:var(--gold)}
+.ch-text{padding:12px 13px 16px;font-family:'Crimson Pro',serif;font-size:16px;line-height:1.88;color:var(--text);white-space:pre-wrap}
+
+/* CHAPTER ACTIONS */
+.ch-actions{padding:10px 13px 13px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.next-btn{width:100%;background:linear-gradient(135deg,var(--jade),#1a4030);color:var(--gold);border:1px solid var(--gold2);padding:11px;border-radius:10px;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;cursor:pointer;transition:opacity .2s}
+.next-btn:active{opacity:.8}
+.next-btn:disabled{opacity:.3;cursor:not-allowed}
+.audio-row{display:flex;gap:7px}
+.audio-btn{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px}
+.audio-btn:active{border-color:var(--gold2);color:var(--gold)}
+.audio-btn.playing{border-color:var(--jade);color:#4ade80}
+
+/* FEEDBACK PANEL */
+.fb-panel{background:var(--faint);border-top:1px solid var(--border);padding:11px 13px}
+.fb-panel p{font-family:'Crimson Pro',serif;font-size:13px;color:var(--muted);margin-bottom:7px;font-style:italic}
+.fb-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;resize:none;height:60px;outline:none;line-height:1.5}
+.fb-input:focus{border-color:var(--gold2)}
+.fb-send{margin-top:6px;background:var(--gold2);color:var(--text);border:none;padding:7px 14px;border-radius:7px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif}
+.fb-reply{margin-top:8px;font-family:'Crimson Pro',serif;font-size:14px;color:var(--text);line-height:1.7;display:none}
+
+/* WELCOME MSG */
+.msg-ai{align-self:flex-start;max-width:95%;background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--jade);border-radius:12px;border-top-left-radius:3px;padding:10px 13px;font-family:'Crimson Pro',serif;font-size:15px;line-height:1.75}
+
+/* TYPING */
+.typing-bubble{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--jade);border-radius:12px;border-top-left-radius:3px;padding:11px 16px;display:flex;gap:5px;align-items:center}
+.typing-bubble span{width:5px;height:5px;background:var(--muted);border-radius:50%;animation:bounce 1.2s infinite}
+.typing-bubble span:nth-child(2){animation-delay:.2s}
+.typing-bubble span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.3}40%{transform:translateY(-4px);opacity:1}}
+.err-bubble{align-self:flex-start;background:rgba(139,26,26,.1);border:1px solid rgba(139,26,26,.3);color:#f87171;padding:8px 12px;border-radius:8px;font-size:12px;max-width:95%}
+
+/* BOTTOM BAR */
+.bottom-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 13px;flex-shrink:0}
+
+/* CHAPTER VIEWER MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;flex-direction:column}
+.modal-bg.open{display:flex}
+.modal-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.modal-header h2{font-family:'Cinzel',serif;font-size:14px;color:var(--gold);flex:1;letter-spacing:.5px}
+.modal-close-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+.modal-body{flex:1;overflow-y:auto;padding:16px}
+.modal-body::-webkit-scrollbar{width:3px}
+.modal-body::-webkit-scrollbar-thumb{background:var(--faint)}
+
+/* INFO/MEM MODAL */
+.sheet-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;align-items:flex-end;justify-content:center}
+.sheet-bg.open{display:flex}
+.sheet{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:18px;width:100%;max-height:82vh;overflow-y:auto}
+.sheet h2{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:1px;margin-bottom:13px}
+.sheet-sec{margin-bottom:13px}
+.sheet-sec h3{font-family:'Cinzel',serif;font-size:9px;letter-spacing:1.5px;color:var(--gold2);text-transform:uppercase;margin-bottom:6px}
+.sheet-sec p,.sheet-sec li{font-family:'Crimson Pro',serif;font-size:14px;color:var(--text);line-height:1.7;margin-bottom:3px}
+.sheet-close{background:var(--faint);border:1px solid var(--border);color:var(--muted);padding:8px;border-radius:8px;font-size:12px;cursor:pointer;width:100%;margin-top:5px;font-family:'Inter',sans-serif}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--jade);color:var(--gold);padding:7px 15px;border-radius:8px;font-size:11px;z-index:999;font-family:'Inter',sans-serif;white-space:nowrap;pointer-events:none}
+
+/* Banner instalar PWA */
+#installBanner{display:none;background:linear-gradient(135deg,var(--jade),#1a4030);border-bottom:1px solid var(--gold2);padding:8px 13px;flex-shrink:0;align-items:center;gap:8px}
+#installBanner.show{display:flex}
+#installBanner p{flex:1;font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:.5px}
+#installBanner button{background:var(--gold2);color:var(--text);border:none;padding:5px 11px;border-radius:6px;font-size:10px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap}
+#installBanner .dismiss{background:transparent;border:1px solid var(--border);color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✦</div>
+  <div class="hdr-info">
+    <h1>El Cronista Inmortal</h1>
+    <p>La historia de Wei Rojo · Axis Reed</p>
+  </div>
+  <div class="hdr-btns">
+    <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊</button>
+    <button class="hdr-btn" onclick="openSheet('worldSheet')">📜</button>
+    <button class="hdr-btn" onclick="openSheet('memSheet')">🧠</button>
+    <button class="hdr-btn" style="color:#f87171;border-color:#8b1a1a" onclick="confirmReset()">↺</button>
+  </div>
+</header>
+
+<!-- Banner de instalación PWA (solo aparece cuando el navegador lo soporta) -->
+<div id="installBanner">
+  <p>📲 Instalar como app</p>
+  <button onclick="installPWA()">Instalar</button>
+  <button class="dismiss" onclick="dismissInstall()">✕</button>
+</div>
+
+<div class="cfg-bar">
+  <label>API Key:</label>
+  <input type="password" id="apiKey" placeholder="AIza...">
+  <button class="btn-ok" onclick="saveKey()">OK</button>
+</div>
+
+<div class="workspace">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-tabs">
+      <div class="sb-tab active" id="tab-info" onclick="switchTab('info')">Info</div>
+      <div class="sb-tab" id="tab-caps" onclick="switchTab('caps')">Caps</div>
+    </div>
+    <div class="sb-panel active" id="panel-info">
+      <div class="sb-sec">
+        <h3>Protagonista</h3>
+        <div class="sb-row"><span class="sb-lbl">Nombre</span><span class="sb-val">Wei Rojo</span></div>
+        <div class="sb-row"><span class="sb-lbl">Rango</span><span class="sb-val" id="sbRank">Mortal</span></div>
+        <div class="sb-row"><span class="sb-lbl">Cap.</span><span class="sb-val" id="sbChap">0</span></div>
+        <div class="sb-row"><span class="sb-lbl">Jade</span><span class="sb-val" id="sbJade">Dormido</span></div>
+      </div>
+      <div class="sb-sec">
+        <h3>Personajes</h3>
+        <div class="char-item"><div class="char-name">Wei Rojo</div><div class="char-role">Protagonista</div></div>
+        <div class="char-item"><div class="char-name">Han Oscuro</div><div class="char-role">Rival</div></div>
+        <div class="char-item"><div class="char-name">Ling Mei</div><div class="char-role">Amiga infancia</div></div>
+        <div class="char-item"><div class="char-name">Bao</div><div class="char-role">Amigo leal</div></div>
+      </div>
+      <div class="sb-sec">
+        <h3>Habilidades</h3>
+        <div id="sbSkills"><span style="color:var(--muted);font-size:9px;font-style:italic">Ninguna aún</span></div>
+      </div>
+      <div class="sb-sec">
+        <h3>Sectas</h3>
+        <div style="margin-bottom:6px"><div style="color:var(--gold2);font-size:9px">⚖ Viento Quieto</div><div style="color:var(--muted);font-size:8px">Justa. Fría.</div></div>
+        <div style="margin-bottom:6px"><div style="color:#4ade80;font-size:9px">☀ Luz Perpetua</div><div style="color:var(--muted);font-size:8px">Heroica.</div></div>
+        <div><div style="color:#f87171;font-size:9px">☠ Sombra Roja</div><div style="color:var(--muted);font-size:8px">Oscura.</div></div>
+      </div>
+    </div>
+    <div class="sb-panel" id="panel-caps">
+      <div id="chList"><div style="padding:14px 10px;color:var(--muted);font-size:11px;font-style:italic;text-align:center;font-family:'Crimson Pro',serif">Aún no hay capítulos</div></div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-panel">
+    <div id="chat"></div>
+    <div class="bottom-bar" id="bottomBar">
+      <button class="next-btn" id="mainNextBtn" onclick="nextChapter()">⚔ Comenzar — Capítulo 1</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAPTER VIEWER MODAL -->
+<div class="modal-bg" id="chapterModal">
+  <div class="modal-header">
+    <h2 id="modalChTitle">—</h2>
+    <button class="modal-close-btn" onclick="closeChapterModal()">✕ Cerrar</button>
+  </div>
+  <div class="modal-body" id="modalChBody"></div>
+</div>
+
+<!-- FEEDBACK SHEET -->
+<div class="sheet-bg" id="fbSheet" onclick="closeFbSheet()">
+  <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:30px">
+    <h2>💬 Axis Reed escucha</h2>
+    <p style="font-family:'Crimson Pro',serif;font-size:14px;color:var(--muted);margin-bottom:12px;font-style:italic">¿Qué piensas de este capítulo? Dile qué te gustó, qué cambiarías, cómo están las imágenes, el ritmo, los personajes…</p>
+    <textarea class="fb-input" id="fbText" placeholder="Escribe tu feedback aquí…" style="height:90px"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="fb-send" style="flex:1" onclick="submitFeedback()">Enviar a Axis Reed</button>
+      <button class="sheet-close" style="flex:1;margin:0" onclick="closeFbSheet()">Cancelar</button>
+    </div>
+    <div id="fbSheetReply" style="display:none;margin-top:12px;font-family:'Crimson Pro',serif;font-size:15px;color:var(--text);line-height:1.7;background:var(--faint);border-left:2px solid var(--jade);padding:10px 13px;border-radius:8px"></div>
+  </div>
+</div>
+
+<!-- WORLD SHEET -->
+<div class="sheet-bg" id="worldSheet" onclick="closeSheet('worldSheet')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <h2>El Mundo · Reglas de Hierro</h2>
+    <div class="sheet-sec"><h3>Wei Rojo</h3><p>Gordito, pelirrojo, piel blanca manchada de carbón. Fraguas, rango más bajo. Padre muerto. Madre enferma agresiva. Hermano mayor muy enfermo. Hermana pequeña con potencial oculto. Pensador estratégico — mente brillante y caótica.</p></div>
+    <div class="sheet-sec"><h3>El Jade Negro</h3><p>Del padre muerto. Da claridad mental en crisis. Despertará conciencia. Destino: corazón de espada forjada por Wei Rojo.</p></div>
+    <div class="sheet-sec"><h3>Reglas Absolutas</h3>
+      <ul>
+        <li>Escala de poder consistente — nunca se rompe</li>
+        <li>Venganzas proporcionales, sin psicópatas</li>
+        <li>Máximo triángulo amoroso, termina con una</li>
+        <li>Sin harén ni sistema inventado</li>
+        <li>Habilidades: nombre épico en español + costo real</li>
+        <li>Mascota evoluciona lento hasta montura legendaria</li>
+        <li>Maestros progresivos</li>
+      </ul>
+    </div>
+    <button class="sheet-close" onclick="closeSheet('worldSheet')">Cerrar</button>
+  </div>
+</div>
+
+<!-- MEM SHEET -->
+<div class="sheet-bg" id="memSheet" onclick="closeSheet('memSheet')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <h2>Memoria · Archivo Vivo</h2>
+    <div id="memContent" style="font-family:'Crimson Pro',serif;font-size:14px;line-height:1.8;color:var(--text)"></div>
+    <button class="sheet-close" onclick="closeSheet('memSheet')">Cerrar</button>
+  </div>
+</div>
+
+<script>
+// ══ PWA INSTALL ════════════════════════════════════════════════
+// Registrar service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    console.log('SW registrado:', reg.scope);
+  }).catch(err => {
+    console.warn('SW error:', err);
+  });
+}
+
+// Capturar evento beforeinstallprompt para mostrar banner propio
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Solo mostrar si no fue descartado antes
+  if (!localStorage.getItem('cronista_install_dismissed')) {
+    document.getElementById('installBanner').classList.add('show');
+  }
+});
+
+function installPWA() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(choice => {
+    if (choice.outcome === 'accepted') toast('✓ App instalada');
+    deferredInstallPrompt = null;
+    document.getElementById('installBanner').classList.remove('show');
+  });
+}
+
+function dismissInstall() {
+  document.getElementById('installBanner').classList.remove('show');
+  localStorage.setItem('cronista_install_dismissed', '1');
+}
+
+// ══ STATE ══════════════════════════════════════════════════════
+let apiKey = localStorage.getItem('cronista_key') || '';
+let muted = false;
+let busy = false;
+let shortHistory = [];
+let feedbackLog = JSON.parse(localStorage.getItem('cronista_feedback') || '[]');
+
+// Textos por capítulo — nunca se embeben en HTML, siempre se leen desde aquí
+const chapterTexts = {};
+let modalCurrentText = '';
+
+let mem = JSON.parse(localStorage.getItem('cronista_mem') || JSON.stringify({
+  chapter:0, rank:'Mortal', jade:'Dormido',
+  skills:[], masters:[], key_events:[],
+  last_summary:'La historia aún no ha comenzado.'
+}));
+
+let savedChapters = JSON.parse(localStorage.getItem('cronista_chapters') || '[]');
+
+// Cargar textos guardados en memoria para que el audio funcione tras recargar
+savedChapters.forEach(ch => { if (ch.text) chapterTexts[ch.num] = ch.text; });
+
+if (apiKey) document.getElementById('apiKey').value = apiKey;
+updateSidebar();
+renderChapterList();
+if (mem.chapter > 0) document.getElementById('bottomBar').style.display = 'none';
+
+// ══ CONFIG ════════════════════════════════════════════════════
+function saveKey() {
+  apiKey = document.getElementById('apiKey').value.trim();
+  localStorage.setItem('cronista_key', apiKey);
+  toast('✓ API Key guardada');
+}
+
+// ══ TABS ══════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.sb-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sb-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ══ SYSTEM PROMPT ═════════════════════════════════════════════
+function buildPrompt() {
+  const fbSection = feedbackLog.length
+    ? `\nRETROALIMENTACIÓN DEL EDITOR (aprende de esto):\n${feedbackLog.slice(-5).map(f=>'- '+f).join('\n')}`
+    : '';
+  return `Eres Axis Reed, cronista de la novela de cultivo "El Inmortal de Jade Negro". Escribes en español.
+
+ESTADO ACTUAL:
+- Capítulo: ${mem.chapter}
+- Rango de Wei Rojo: ${mem.rank}
+- Jade Negro: ${mem.jade}
+- Habilidades descubiertas: ${mem.skills.join(', ') || 'ninguna'}
+- Maestros: ${mem.masters.join(', ') || 'ninguno aún'}
+- Resumen anterior: ${mem.last_summary}
+- Eventos clave: ${mem.key_events.slice(-8).join(' | ') || 'ninguno'}
+${fbSection}
+
+PERSONAJES FIJOS:
+- WEI ROJO: gordito, pelirrojo, piel blanca manchada carbón. Fraguas. Padre muerto. Madre enferma y agresiva. Hermano mayor muy enfermo. Hermana pequeña con potencial oculto. Pensador estratégico — su mente es su arma y también su peor enemigo.
+- HAN OSCURO: rival, pelo negro azabache. Tuvo todas las facilidades + talento. Arrogante pero genuinamente capaz. No es malvado.
+- LING MEI: amiga infancia. Se alejó por talento superior. En el fondo sigue siendo buena.
+- BAO: amigo leal. Parece tonto, no lo es. Evoluciona.
+- JADE NEGRO: fragmento del padre muerto. Estado actual: ${mem.jade}. Destino final: corazón de espada.
+
+TRES SECTAS: Viento Quieto (gris/justa), Luz Perpetua (heroica), Sombra Roja (oscura).
+
+REGLAS ABSOLUTAS — JAMÁS ROMPER:
+1. Escala de poder consistente siempre
+2. Venganzas proporcionales, sin psicópatas
+3. Máximo triángulo amoroso, termina con una
+4. Cada habilidad: NOMBRE ÉPICO EN ESPAÑOL + costo real
+5. Mascota evoluciona MUY lento hacia montura legendaria
+6. Maestros progresivos — cada uno llega a su límite
+
+LONGITUD DE CAPÍTULOS: 800-1000 palabras. Cortos pero densos — cada párrafo tiene peso. No resumas: narra con detalle sensorial, pensamientos de Wei Rojo y diálogos que revelan carácter. Que cada capítulo cierre con un gancho que obligue a continuar.
+
+FORMATO OBLIGATORIO AL FINAL DEL CAPÍTULO (después del texto):
+[IMAGEN: descripción cinematográfica MUY específica en inglés para la imagen del capítulo. Incluye: personaje con descripción física exacta (chubby red-haired pale boy with coal-stained skin), qué está haciendo, dónde exactamente, objeto o elemento que define la escena, emoción en la iluminación, hora del día, colores dominantes. Máximo 40 palabras. ÚNICA para este capítulo — no genérica.]
+[RESUMEN: 2-3 líneas en español de los eventos más importantes]`;
+}
+
+// ══ GEMINI ════════════════════════════════════════════════════
+async function callGemini(msg) {
+  if (!apiKey) throw new Error('Guarda tu API Key primero.');
+  const messages = [...shortHistory, {role:'user', content:msg}];
+  const contents = messages.map(m => ({
+    role: m.role==='assistant' ? 'model' : 'user',
+    parts: [{text: m.content}]
+  }));
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        system_instruction:{parts:[{text:buildPrompt()}]},
+        contents,
+        generationConfig:{temperature:0.9, maxOutputTokens:8192}
+      })
+    }
+  );
+  if (!res.ok) {
+    const e = await res.json().catch(()=>({}));
+    throw new Error(e.error?.message || `Error Gemini ${res.status}`);
+  }
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Respuesta vacía de Gemini');
+  return text;
+}
+
+// ══ IMAGES ════════════════════════════════════════════════════
+function buildImgUrl(desc, seed) {
+  // El desc viene muy específico del modelo — lo ponemos PRIMERO para que tenga más peso
+  const prompt = `${desc}, xianxia wuxia cultivation fantasy illustration, dramatic chiaroscuro lighting, rich jewel-toned colors, cinematic composition, highly detailed character art, no text, no watermark, no logo, no border`;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=512&seed=${seed}&nologo=true&enhance=true&model=flux`;
+}
+
+function loadImgPromise(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(url);
+    img.onerror = () => resolve(null);
+    setTimeout(() => resolve(null), 28000);
+    img.src = url;
+  });
+}
+
+// ══ PARSE ═════════════════════════════════════════════════════
+function parseChapter(raw, chNum) {
+  const imgMatch   = raw.match(/\[IMAGEN:\s*([^\]]+)\]/i);
+  const resumMatch = raw.match(/\[RESUMEN:\s*([^\]]+)\]/i);
+
+  // Prompt de imagen muy específico; fallback mínimo si el modelo no lo genera
+  const imgDesc = imgMatch
+    ? imgMatch[1].trim()
+    : `chubby red-haired pale boy with coal-stained skin in a cultivation sect forge, dramatic golden candlelight, chapter ${chNum}`;
+  const resumen = resumMatch ? resumMatch[1].trim() : mem.last_summary;
+
+  let texto = raw
+    .replace(/\[IMAGEN:[^\]]+\]/gi, '')
+    .replace(/\[RESUMEN:[^\]]+\]/gi, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/^#{1,3}\s+/gm, '')
+    .trim();
+
+  // Título de la primera línea
+  const lines = texto.split('\n');
+  let titulo = (lines[0]||`Capítulo ${chNum}`)
+    .replace(/^Capítulo\s+\d+[\s\-—:]*/i,'').replace(/[*#]/g,'').trim();
+  if (!titulo || titulo.length < 3) titulo = `Capítulo ${chNum}`;
+  texto = lines.slice(1).join('\n').trim();
+
+  // Skills
+  const skillRx = /((?:Técnica|Arte|Puño|Palma|Sello|Camino|Furia|Toque|Golpe|Viento|Llama|Trueno|Garra|Paso|Espíritu|Canto)\s+(?:del?|de la|de los)?\s*[A-ZÁÉÍÓÚÑ][a-záéíóúñ\s]{2,22})/g;
+  const newSkills = [...new Set((raw.match(skillRx)||[]).map(s=>s.trim()))].slice(0,3);
+
+  let jadeUpd=null;
+  if (/jade.{0,40}(calor|vibr|puls|susurr|brillo|lati|despert)/i.test(raw)) jadeUpd='Despertando';
+  if (/jade.{0,40}(habl|voz|conciencia|respond)/i.test(raw)) jadeUpd='Consciente';
+
+  let rankUpd=null;
+  const ranks=['condensación de qi','fundación espiritual','núcleo dorado','alma nascent','transformación espiritual'];
+  for (const r of ranks) { if (raw.toLowerCase().includes(r)) { rankUpd=r.split(' ').map(w=>w[0].toUpperCase()+w.slice(1)).join(' '); break; } }
+
+  return {titulo, texto, imgDesc, resumen, newSkills, jadeUpd, rankUpd};
+}
+
+// ══ NEXT CHAPTER ══════════════════════════════════════════════
+// ORDEN CORRECTO:
+//  1) Generar texto del capítulo
+//  2) Crear la card con imagen de apertura cargando
+//  3) Iniciar carga de imagen de APERTURA y mostrarla cuando llega
+//  4) Mostrar el TEXTO del capítulo
+//  5) Cargar imagen de DESENLACE y mostrarla al final del texto
+//  6) Ofrecer el audio (requiere gesto del usuario en móvil)
+
+async function nextChapter() {
+  if (!apiKey) { showErr('Guarda tu API Key primero.'); return; }
+  if (busy) return;
+  busy = true;
+
+  document.querySelectorAll('.next-btn, #mainNextBtn').forEach(b => b.disabled = true);
+
+  const chNum = mem.chapter + 1;
+  const prompt = chNum === 1
+    ? `Escribe el Capítulo 1. Título épico en primera línea. Wei Rojo trabaja en las fraguas al anochecer. Su padre acaba de morir. Entre sus cosas encuentra el jade negro. Establece el mundo, la secta y la familia en crisis. Termina con un gancho tenso. 800-1000 palabras. Incluye [IMAGEN:] y [RESUMEN:] al final.`
+    : `Escribe el Capítulo ${chNum}, continuando exactamente donde terminamos. Título épico en primera línea. 800-1000 palabras — denso, con gancho al final. Incluye [IMAGEN:] y [RESUMEN:] al final.`;
+
+  showTyping();
+
+  try {
+    // 1) GENERAR TEXTO
+    const raw = await callGemini(prompt);
+    shortHistory.push({role:'user', content:prompt});
+    shortHistory.push({role:'assistant', content:raw});
+    if (shortHistory.length > 8) shortHistory = shortHistory.slice(-8);
+
+    const parsed = parseChapter(raw, chNum);
+
+    // Actualizar memoria
+    mem.chapter = chNum;
+    mem.last_summary = parsed.resumen;
+    if (parsed.rankUpd) mem.rank = parsed.rankUpd;
+    if (parsed.jadeUpd) mem.jade = parsed.jadeUpd;
+    if (parsed.newSkills.length) mem.skills = [...new Set([...mem.skills,...parsed.newSkills])];
+    mem.key_events = [...mem.key_events.slice(-19), `Cap.${chNum}: ${parsed.titulo}`];
+    localStorage.setItem('cronista_mem', JSON.stringify(mem));
+    updateSidebar();
+
+    removeTyping();
+    document.getElementById('bottomBar').style.display = 'none';
+
+    const seed = chNum * 137;
+
+    // 2) CREAR CARD con imagen en loading
+    const card = buildChapterCard(chNum, parsed);
+    document.getElementById('chat').appendChild(card);
+    scrollBottom();
+
+    // 3) CARGAR LA IMAGEN ÚNICA (prompt muy específico → mejor calidad)
+    const imgUrl = buildImgUrl(parsed.imgDesc, seed);
+    let img = await loadImgPromise(imgUrl);
+    if (!img) img = await loadImgPromise(buildImgUrl(parsed.imgDesc, seed + 500)); // retry
+    injectImg(`img-portada-${chNum}`, img, parsed.titulo);
+
+    // Guardar capítulo
+    const chData = {num:chNum, title:parsed.titulo, text:parsed.texto, img, skills:parsed.newSkills};
+    savedChapters.push(chData);
+    localStorage.setItem('cronista_chapters', JSON.stringify(savedChapters));
+    addToChList(chData);
+
+    scrollBottom();
+
+  } catch(err) {
+    removeTyping();
+    showErr(err.message);
+  }
+
+  busy = false;
+  document.querySelectorAll('.next-btn, #mainNextBtn').forEach(b => b.disabled = false);
+}
+
+// Inyectar imagen en su slot
+function injectImg(slotId, url, titulo) {
+  const slot = document.getElementById(slotId);
+  if (!slot) return;
+  if (url) {
+    slot.innerHTML = `<img src="${url}" loading="lazy" alt="${titulo}" /><div class="img-slot-label">${titulo}</div>`;
+  } else {
+    slot.style.display = 'none';
+  }
+}
+
+// Card: header → titulo → IMAGEN PORTADA (cargando) → texto → acciones
+function buildChapterCard(chNum, parsed) {
+  const card = document.createElement('div');
+  card.className = 'chapter-card';
+  card.id = `card-${chNum}`;
+
+  // Guardar texto en objeto JS — nunca embeber en HTML onclick
+  chapterTexts[chNum] = parsed.texto;
+
+  const skillHtml = parsed.newSkills && parsed.newSkills.length
+    ? `<div class="new-skill">⚡ ${parsed.newSkills.join(' · ')}</div>` : '';
+
+  card.innerHTML = `
+    <div class="ch-header">
+      <span class="ch-num">Capítulo ${chNum}</span>
+      <span style="font-size:9px;color:var(--muted)">${new Date().toLocaleDateString('es-MX',{day:'numeric',month:'short'})}</span>
+    </div>
+    <div class="ch-title">${parsed.titulo}</div>
+
+    <div class="img-portada" id="img-portada-${chNum}">
+      <div class="img-loading"><div class="spinner"></div><span>Generando ilustración…</span></div>
+    </div>
+
+    ${skillHtml}
+
+    <div class="ch-text">${parsed.texto}</div>
+
+    <div class="ch-actions">
+      <div class="audio-row">
+        <button class="audio-btn" id="audioBtn-${chNum}"
+          onclick="toggleChapterAudio(${chNum}, this)">🔊 Escuchar capítulo</button>
+        <button class="audio-btn"
+          onclick="restartAudio(${chNum}, document.getElementById('audioBtn-${chNum}'))">↺ Reiniciar</button>
+      </div>
+      <button class="next-btn" onclick="nextChapter()">⚔ Siguiente Capítulo</button>
+      <button class="audio-btn" style="width:100%;padding:10px;font-size:13px"
+        onclick="openFeedback(${chNum})">💬 Hablar con Axis Reed</button>
+    </div>
+  `;
+  return card;
+}
+
+// ══ AUDIO ════════════════════════════════════════════════════
+
+function readText(text, btn) {
+  if (!SS) { toast('Audio no soportado en este navegador'); return; }
+  if (!text || !text.trim()) { toast('Sin texto para leer'); return; }
+
+  SS.cancel();
+
+  setTimeout(() => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'es-MX';
+    u.rate = 0.88;
+    u.pitch = 0.85;
+
+    const voices = SS.getVoices();
+    const v = voices.find(v => v.lang.startsWith('es') && /male/i.test(v.name))
+           || voices.find(v => v.lang.startsWith('es'))
+           || voices[0] || null;
+    if (v) u.voice = v;
+
+    u.onstart = () => { if (btn) { btn.textContent = '⏹ Detener'; btn.classList.add('playing'); } };
+    u.onend   = () => { stopKeepAlive(); if (btn) { btn.textContent = '🔊 Escuchar capítulo'; btn.classList.remove('playing'); } };
+    u.onerror = (e) => {
+      stopKeepAlive();
+      if (btn) { btn.textContent = '🔊 Escuchar capítulo'; btn.classList.remove('playing'); }
+      if (e.error !== 'interrupted' && e.error !== 'canceled') toast('Error de audio: ' + e.error);
+    };
+
+    SS.speak(u);
+    startKeepAlive();
+  }, 150);
+}
+
+// ══ AUDIO — keep-alive y funciones públicas ════════════════════
+let keepAliveInterval = null;
+
+const SS = ('speechSynthesis' in window) ? window.speechSynthesis : null;
+
+function startKeepAlive() {
+  if (!SS) return;
+  keepAliveInterval = setInterval(() => {
+    if (SS.speaking && SS.paused) SS.resume();
+  }, 10000);
+}
+
+function stopKeepAlive() {
+  if (keepAliveInterval) { clearInterval(keepAliveInterval); keepAliveInterval = null; }
+}
+
+function toggleChapterAudio(chNum, btn) {
+  if (!SS) { toast('Audio no soportado en este navegador'); return; }
+  if (SS.speaking) {
+    SS.cancel(); stopKeepAlive();
+    btn.textContent = '🔊 Escuchar capítulo'; btn.classList.remove('playing');
+  } else {
+    const text = chapterTexts[chNum];
+    if (!text) { toast('Texto no disponible'); return; }
+    readText(text, btn);
+  }
+}
+
+function restartAudio(chNum, btn) {
+  if (!SS) return;
+  stopKeepAlive(); SS.cancel();
+  const text = chapterTexts[chNum];
+  if (!text) { toast('Texto no disponible'); return; }
+  setTimeout(() => readText(text, btn), 200);
+}
+
+function toggleMute() {
+  muted = !muted;
+  const btn = document.getElementById('muteBtn');
+  btn.textContent = muted ? '🔇' : '🔊';
+  btn.classList.toggle('muted', muted);
+  if (muted && SS) { SS.cancel(); stopKeepAlive(); }
+  toast(muted ? 'Audio silenciado' : 'Audio activado');
+}
+
+// Precargar voces (necesario en Chrome/Android)
+if (SS) {
+  SS.getVoices();
+  SS.addEventListener('voiceschanged', () => SS.getVoices());
+}
+
+// ══ FEEDBACK ══════════════════════════════════════════════════
+let currentFbChapter = null;
+
+function openFeedback(chNum) {
+  currentFbChapter = chNum;
+  document.getElementById('fbText').value = '';
+  document.getElementById('fbSheetReply').style.display = 'none';
+  document.getElementById('fbText').disabled = false;
+  document.querySelector('#fbSheet .fb-send').textContent = 'Enviar a Axis Reed';
+  document.getElementById('fbSheet').classList.add('open');
+  setTimeout(() => document.getElementById('fbText').focus(), 300);
+}
+
+function closeFbSheet() {
+  document.getElementById('fbSheet').classList.remove('open');
+}
+
+async function submitFeedback() {
+  const text = document.getElementById('fbText').value.trim();
+  if (!text) return;
+  if (!apiKey) { toast('Guarda tu API Key primero.'); return; }
+
+  const sendBtn = document.querySelector('#fbSheet .fb-send');
+  const replyEl = document.getElementById('fbSheetReply');
+  sendBtn.textContent = 'Axis Reed reflexiona…';
+  sendBtn.disabled = true;
+  document.getElementById('fbText').disabled = true;
+  replyEl.style.display = 'none';
+
+  feedbackLog.push(`Cap.${currentFbChapter}: ${text}`);
+  localStorage.setItem('cronista_feedback', JSON.stringify(feedbackLog));
+
+  try {
+    const fbPrompt = `El editor te da retroalimentación sobre el Capítulo ${currentFbChapter}: "${text}". Responde brevemente en personaje como Axis Reed — reconoce el feedback específicamente, di qué ajustarás en los próximos capítulos. Máximo 4 líneas, en español.`;
+    const messages = [{role:'user', content:fbPrompt}];
+    const contents = messages.map(m => ({role:'user', parts:[{text:m.content}]}));
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {method:'POST', headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({system_instruction:{parts:[{text:buildPrompt()}]}, contents, generationConfig:{temperature:0.8, maxOutputTokens:300}})}
+    );
+    const data = await res.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Lo tendré en cuenta.';
+    replyEl.textContent = reply;
+    replyEl.style.display = 'block';
+  } catch {
+    replyEl.textContent = 'Lo tendré en cuenta para los próximos capítulos.';
+    replyEl.style.display = 'block';
+  }
+
+  sendBtn.textContent = '✓ Enviado';
+  sendBtn.disabled = false;
+}
+
+// ══ CHAPTER LIST ══════════════════════════════════════════════
+function renderChapterList() {
+  if (!savedChapters.length) return;
+  document.getElementById('chList').innerHTML = '';
+  savedChapters.slice().reverse().forEach(ch => addToChList(ch, true));
+}
+
+function addToChList(ch, prepend=false) {
+  const list = document.getElementById('chList');
+  const empty = list.querySelector('div[style*="text-align"]');
+  if (empty) empty.remove();
+
+  const item = document.createElement('div');
+  item.className = 'ch-list-item';
+  item.onclick = () => openChapterModal(ch);
+  item.innerHTML = `
+    <div class="ch-list-num">Cap. ${ch.num}</div>
+    <div class="ch-list-title">${ch.title}</div>
+    ${ch.img ? `<img class="ch-list-thumb" src="${ch.img}" loading="lazy" alt="Cap. ${ch.num}" />` : ''}
+  `;
+  if (prepend) list.insertBefore(item, list.firstChild);
+  else list.appendChild(item);
+}
+
+// ══ CHAPTER MODAL ═════════════════════════════════════════════
+// ══ CHAPTER MODAL ═════════════════════════════════════════════
+function openChapterModal(ch) {
+  document.getElementById('modalChTitle').textContent = `Cap. ${ch.num} — ${ch.title}`;
+  const body = document.getElementById('modalChBody');
+
+  modalCurrentText = ch.text || '';
+  chapterTexts[ch.num] = modalCurrentText;
+
+  body.innerHTML = `
+    ${ch.img ? `
+      <div style="width:100%;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:14px;position:relative">
+        <img src="${ch.img}" style="width:100%;display:block" alt="${ch.title}" />
+        <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(8,10,15,.9));color:var(--gold);font-size:10px;padding:18px 10px 8px;font-family:'Crimson Pro',serif;font-style:italic;text-align:center">${ch.title}</div>
+      </div>` : ''}
+
+    <div style="display:flex;gap:7px;margin-bottom:14px">
+      <button class="audio-btn" id="modalAudioBtn" style="flex:1"
+        onclick="toggleModalAudio(this)">🔊 Escuchar</button>
+      <button class="audio-btn" style="flex:1"
+        onclick="restartModalAudio()">↺ Reiniciar</button>
+    </div>
+
+    <div style="font-family:'Crimson Pro',serif;font-size:16px;line-height:1.88;color:var(--text);white-space:pre-wrap">${ch.text}</div>
+  `;
+  document.getElementById('chapterModal').classList.add('open');
+}
+
+function closeChapterModal() {
+  if (SS) { SS.cancel(); stopKeepAlive(); }
+  document.getElementById('chapterModal').classList.remove('open');
+}
+
+function toggleModalAudio(btn) {
+  if (!SS) { toast('Audio no soportado en este navegador'); return; }
+  if (SS.speaking) {
+    SS.cancel(); stopKeepAlive();
+    btn.textContent = '🔊 Escuchar'; btn.classList.remove('playing');
+  } else {
+    readText(modalCurrentText, btn);
+  }
+}
+
+function restartModalAudio() {
+  if (!SS) return;
+  stopKeepAlive(); SS.cancel();
+  const btn = document.getElementById('modalAudioBtn');
+  setTimeout(() => readText(modalCurrentText, btn), 200);
+}
+
+// ══ UI ════════════════════════════════════════════════════════
+function showTyping() {
+  const c=document.getElementById('chat');
+  const d=document.createElement('div');
+  d.className='typing-bubble'; d.id='typing';
+  d.innerHTML='<span></span><span></span><span></span>';
+  c.appendChild(d); scrollBottom();
+}
+function removeTyping() { document.getElementById('typing')?.remove(); }
+function showErr(msg) {
+  removeTyping();
+  const c=document.getElementById('chat');
+  const d=document.createElement('div');
+  d.className='err-bubble'; d.textContent='⚠ '+msg;
+  c.appendChild(d); scrollBottom();
+}
+function scrollBottom() { const c=document.getElementById('chat'); c.scrollTop=c.scrollHeight; }
+
+function updateSidebar() {
+  document.getElementById('sbRank').textContent = mem.rank;
+  document.getElementById('sbChap').textContent = mem.chapter;
+  document.getElementById('sbJade').textContent = mem.jade;
+  const el = document.getElementById('sbSkills');
+  el.innerHTML = mem.skills.length
+    ? mem.skills.map(s=>`<div class="skill-item">⚡ ${s}</div>`).join('')
+    : '<span style="color:var(--muted);font-size:9px;font-style:italic">Ninguna aún</span>';
+}
+
+function openSheet(id) {
+  if (id==='memSheet') {
+    document.getElementById('memContent').innerHTML=`
+      <p><b style="color:var(--gold)">Capítulo:</b> ${mem.chapter}</p>
+      <p><b style="color:var(--gold)">Rango:</b> ${mem.rank}</p>
+      <p><b style="color:var(--gold)">Jade:</b> ${mem.jade}</p>
+      <p><b style="color:var(--gold)">Habilidades:</b> ${mem.skills.join(', ')||'Ninguna'}</p>
+      <p><b style="color:var(--gold)">Maestros:</b> ${mem.masters.join(', ')||'Ninguno aún'}</p>
+      <p style="margin-top:10px"><b style="color:var(--gold)">Último resumen:</b><br>${mem.last_summary}</p>
+      <p style="margin-top:10px"><b style="color:var(--gold)">Eventos:</b></p>
+      ${mem.key_events.slice(-10).map(e=>`<p>• ${e}</p>`).join('')||'<p>Ninguno aún.</p>'}
+      <p style="margin-top:10px"><b style="color:var(--gold)">Feedback guardado:</b> ${feedbackLog.length} entradas</p>
+    `;
+  }
+  document.getElementById(id).classList.add('open');
+}
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+
+function toast(msg) {
+  document.querySelectorAll('.toast').forEach(t=>t.remove());
+  const t=document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2300);
+}
+
+// ══ RESET ═════════════════════════════════════════════════════
+function confirmReset() {
+  const sheet = document.createElement('div');
+  sheet.className = 'sheet-bg open';
+  sheet.id = 'resetSheet';
+  sheet.innerHTML = `
+    <div class="sheet" onclick="event.stopPropagation()" style="padding-bottom:30px">
+      <h2 style="color:#f87171">↺ Reiniciar Historia</h2>
+      <p style="font-family:'Crimson Pro',serif;font-size:15px;color:var(--text);line-height:1.7;margin-bottom:16px">
+        Esto borrará <strong>todos los capítulos, la memoria, las imágenes y el feedback</strong> guardados.<br><br>
+        La historia de Wei Rojo comenzará desde el Capítulo 1.<br><br>
+        <em style="color:var(--muted)">Tu API Key se conservará.</em>
+      </p>
+      <button onclick="doReset()" style="width:100%;background:#8b1a1a;color:#fca5a5;border:1px solid #f87171;padding:11px;border-radius:10px;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;cursor:pointer;margin-bottom:8px">
+        Sí, reiniciar desde cero
+      </button>
+      <button class="sheet-close" onclick="document.getElementById('resetSheet').remove()">Cancelar</button>
+    </div>
+  `;
+  document.body.appendChild(sheet);
+}
+
+function doReset() {
+  const key = localStorage.getItem('cronista_key');
+  localStorage.clear();
+  if (key) localStorage.setItem('cronista_key', key);
+  if ('caches' in window) {
+    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+  }
+  toast('Historia reiniciada — recargando…');
+  setTimeout(() => location.reload(), 1200);
+}
+
+// ══ WELCOME ═══════════════════════════════════════════════════
+setTimeout(() => {
+  const c=document.getElementById('chat');
+  const d=document.createElement('div');
+  d.className='msg-ai';
+  if (mem.chapter === 0) {
+    d.innerHTML=`El cielo sobre la Secta del Viento Quieto lleva tres días nublado.<br><br>Yo, Axis Reed, he sido convocado para narrar esta historia. La de un joven pelirrojo que trabaja en las fraguas y que hoy, entre las cosas de su padre muerto, encontrará algo que el destino llevaba años preparando.<br><br>Presiona <strong style="color:var(--gold)">⚔ Comenzar</strong> para iniciar.`;
+  } else {
+    d.innerHTML=`Axis Reed retoma la crónica desde el Capítulo ${mem.chapter}.<br><br><em style="color:var(--muted)">${mem.last_summary}</em><br><br>Presiona <strong style="color:var(--gold)">⚔ Siguiente Capítulo</strong> para continuar.`;
+    document.getElementById('bottomBar').innerHTML='<button class="next-btn" onclick="nextChapter()">⚔ Continuar — Capítulo '+(mem.chapter+1)+'</button>';
+    document.getElementById('bottomBar').style.display='block';
+  }
+  c.appendChild(d);
+},400);
+</script>
+</body>
+</html>
